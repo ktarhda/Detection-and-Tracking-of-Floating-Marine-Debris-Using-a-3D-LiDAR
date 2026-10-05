@@ -30,6 +30,13 @@ LiDAR + IMU  ->  Tilt correction  ->  Region of interest  ->  Radial segmentatio
 
 ## Results (Calais canal, 3 floating objects)
 
+<table>
+  <tr>
+    <td align="center"><img src="docs/canal_calais.png" height="320"><br><em>Three floating objects on the Calais canal</em></td>
+    <td align="center"><img src="docs/suivi_objets.png" height="320"><br><em>Detection and tracking: each object keeps its box and its ID</em></td>
+  </tr>
+</table>
+
 | Filter | Mean number of tracks | Mean cardinality error | Frames with exact count |
 | --- | --- | --- | --- |
 | Kalman | 3.04 | 0.10 | 92.1 % |
