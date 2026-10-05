@@ -1,43 +1,83 @@
-# Detection and Tracking of Floating Marine Debris Using a 3D LiDAR 
+# Detection and Tracking of Floating Marine Debris Using a 3D LiDAR
 
-# 🌊 Experimental Validation of an Interval Particle Filter for Tracking Floating Objects
+Master's thesis project (Master ISC, Université du Littoral Côte d'Opale), carried out at the **LISIC laboratory (UR 4491), EDyFI team**, March–September 2026.
 
-![Matlab](https://img.shields.io/badge/MATLAB-ED7D31?style=for-the-badge&logo=MathWorks&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![ROS2](https://img.shields.io/badge/ROS2-22314E?style=for-the-badge&logo=ros&logoColor=white)
-![LISIC](https://img.shields.io/badge/LISIC-UR4491-blue?style=for-the-badge)
+The goal is to detect and track floating debris on the water surface with a 3D LiDAR (Ouster OS1-128) and its built-in IMU, and to compare **four state estimation filters**, probabilistic and set-membership (interval-based), on the same real data acquired on the Calais canal.
 
-## 📌 Présentation du Projet
-Ce projet est réalisé au sein du laboratoire **LISIC (UR 4491)** à l'EILCO / ULCO (Équipe EDyFI : Estimation Dynamique et Fusion d'Informations). 
+![Detection on the Calais canal](docs/detection_canal.png)
 
-L'objectif majeur est de développer, valider et implémenter une méthode robuste de **détection et de suivi d'objets flottants** (débris marins, navires, obstacles semi-immergés) en environnement aquatique. Ce système est crucial pour la sécurité maritime, la surveillance environnementale et la navigation des systèmes maritimes autonomes.
+## Pipeline
 
----
+```
+LiDAR + IMU  ->  Tilt correction  ->  Region of interest  ->  Radial segmentation  ->  3D bounding boxes  ->  Multi-object tracking
+ (Ouster)        (roll / pitch)       (water area only)       (range image, ρ)         (box centers)          (4 filters)
+```
 
-## 🔬 Approche Scientifique & Méthodologie
+1. **Tilt correction**: roll and pitch are estimated from the IMU accelerometer, then the point cloud is rotated into the world frame at every frame.
+2. **Region of interest**: only the part of the scan facing the water is kept, which reduces the number of points and removes the quay.
+3. **Radial segmentation**: the range matrix ρ (128 × 512) is processed as a depth image. A jump between neighbouring cells larger than an adaptive threshold τ = max(ε, 1.5 μ) marks the edge of an object. Regions are then closed (3×3) and labelled (8-connectivity).
+4. **Bounding boxes**: one axis-aligned 3D box per object; its center is the measurement sent to the tracker.
+5. **Multi-object tracking**: constant-acceleration model (9 states: position, velocity, acceleration), Mahalanobis gating (d_M < 3.5) and nearest-neighbour association.
 
-Pour faire face aux fortes incertitudes des milieux marins (vagues, reflets, conditions changeantes), le projet repose sur la fusion de capteurs et le calcul par intervalles :
+## The four filters
 
-1. **Module de Détection (Fusion Multi-Capteurs) :** * Fusion de données issues d'un **LiDAR 3D**, d'une **Caméra RGB** et d'une centrale **GPS-IMU**.
-   * Estimation de la distance radiale et de l'orientation de l'objet sous forme d'**intervalles** afin de capturer explicitement les incertitudes de mesure.
+| Filter | Family | Uncertainty representation | File |
+| --- | --- | --- | --- |
+| Kalman filter | Probabilistic (Gaussian) | Mean + covariance | `kalman_classique.m` |
+| Particle filter | Probabilistic (Monte-Carlo) | Weighted particles + resampling | `filtre_particule.m` |
+| UBIKF (Upper Bound Interval Kalman Filter) | Set-membership | State box + upper bound of the covariance | `kalman_ensembliste.m` |
+| Box Particle Filter | Set-membership (Monte-Carlo) | Weighted boxes + subdivision resampling | `filtre_particule_boite.m` |
 
-2. **Module de Suivi (Boxed Particle Filter) :**
-   * Implémentation d'un **Filtre Particulaire par Intervalles (Interval Particle Filter)**.
-   * Utilisation de méthodes de Monte-Carlo basées sur des ensembles pour mettre à jour les particules sous forme de boîtes (*bounding boxes*), garantissant un suivi stable et tolérant aux ambiguïtés.
+## Results (Calais canal, 3 floating objects)
 
----
+| Filter | Mean number of tracks | Mean cardinality error | Frames with exact count |
+| --- | --- | --- | --- |
+| Kalman | 3.04 | 0.10 | 92.1 % |
+| Particle filter | 2.94 | 0.06 | 98.1 % |
+| UBIKF | 2.94 | 0.06 | 98.1 % |
+| Box Particle Filter | 2.96 | 0.07 | 96.8 % |
 
-## 🛠️ Stack Technique & Environnements
+All four filters estimate drift speeds between 0.12 and 0.25 m/s, consistent with the current measured on site (about 0.15 m/s).
 
-Le projet fait le pont entre le prototypage algorithmique et la simulation robotique :
+![3D trajectories of object ID 1 for the four filters](docs/trajectoires.png)
 
-* **Langages principaux :** * **MATLAB :** Pour le prototypage mathématique, l'analyse par intervalles et la modélisation du filtre particulaire en boîte.
-  * **Python :** Pour le traitement des données de vision, la manipulation des nuages de points (Point Clouds) et l'interfaçage système.
-* **Architecture Mobile & Robotique :** Exploitation du framework **ROS2** (Robot Operating System) pour la gestion et la synchronisation des flux de données (*Topics*) des capteurs.
-* **Environnements de Simulation & Datasets :**
-  * **VRX Simulator (Virtual RobotX) :** Environnement virtuel maritime sous Gazebo pour tester les algorithmes en conditions contrôlées.
-  * **Datasets Publics :** Utilisation des bases de données de référence **KITTI** et **nuScenes** pour calibrer la détection par nuages de points.
-  * **Données Réelles :** Validation finale sur des scénarios réels collectés en mer/milieu aquatique par l'équipe du LISIC.
+## Repository structure
 
----
+```
+├── main.m                      # Kalman filter or UBIKF (choose at the top of the file)
+├── Detect_particule.m          # Particle filter or Box Particle Filter (choose at the top of the file)
+├── correct_inclinaison.m       # Tilt correction with the IMU
+├── segmentation_rho_marin.m    # Radial segmentation and bounding boxes
+├── kalman_classique.m          # Kalman filter
+├── kalman_ensembliste.m        # UBIKF
+├── filtre_particule.m          # Particle filter
+├── filtre_particule_boite.m    # Box Particle Filter
+├── sauvegarde.m                # Saves the results of a run (.mat)
+├── plot_figure.m               # Compares the four filters from the saved .mat files
+└── docs/                       # Figures, report and slides
+```
 
+## Requirements
+
+- MATLAB (developed with R2024b)
+- Lidar Toolbox (reading Ouster `.pcap` files with `ousterFileReader`)
+- Image Processing Toolbox (morphological closing, connected-component labelling)
+- [INTLAB](https://www.tuhh.de/ti3/rump/intlab/) for interval computations (UBIKF and Box Particle Filter), not included in this repository
+
+## How to run
+
+1. Install INTLAB and add it to the MATLAB path.
+2. Put the acquisition files (`3objets.pcap` and `3objets.json`) in the project folder. The raw LiDAR recordings are not included in this repository because of their size.
+3. Run `main.m` for the Kalman filter or the UBIKF, or `Detect_particule.m` for the particle filter or the Box Particle Filter. The filter is selected by the `CHOIX_FILTRE` variable at the top of each script.
+4. Run `sauvegarde.m` to save the results, then `plot_figure.m` to compare the four filters.
+
+## References
+
+- T. A. Tran, C. Jauberthie, L. Travé-Massuyès, Q. H. Lu, *An Interval Kalman Filter enhanced by lowering the covariance matrix upper bound*, International Journal of Applied Mathematics and Computer Science, 31(2), 2021.
+- J. Xiong, C. Jauberthie, L. Travé-Massuyès, F. Le Gall, *Fault Detection using Interval Kalman Filtering enhanced by Constraint Propagation*, IEEE CDC, 2013.
+- F. Abdallah, A. Gning, P. Bonnifait, *Box particle filtering for nonlinear state estimation using interval analysis*, Automatica, 44(3), 2008.
+- S. M. Rump, *INTLAB – INTerval LABoratory*, Developments in Reliable Computing, 1999.
+
+## Author
+
+**Khalil Tarhda**, supervised by Régis Lherbier and Mohamed Fnadi (LISIC, Université du Littoral Côte d'Opale).
