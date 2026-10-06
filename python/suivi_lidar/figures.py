@@ -1,9 +1,4 @@
-"""Graphiques de main.m, Detect_particule.m, sauvegarde.m et plot_figure.m, avec matplotlib.
 
-Chaque figure porte le même nom de fenêtre, le même titre, les mêmes couleurs,
-les mêmes épaisseurs de trait et le même lissage (movmean) que dans MATLAB.
-Elle est aussi enregistrée en PNG dans le dossier demandé.
-"""
 
 import re
 import unicodedata

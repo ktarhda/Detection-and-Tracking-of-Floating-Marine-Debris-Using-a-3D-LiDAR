@@ -1,9 +1,4 @@
-"""Extraction des valeurs affichées et archivées pour une piste confirmée.
 
-Bloc « EXTRACTION SPÉCIFIQUE SELON LE FILTRE » de sauvegarde.m : pour chaque
-filtre, on calcule la position, la vitesse et l'accélération (valeur centrale,
-borne basse, borne haute), la diagonale de P et le texte affiché à côté de l'objet.
-"""
 
 import numpy as np
 

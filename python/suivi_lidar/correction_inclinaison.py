@@ -1,16 +1,4 @@
-"""Correction de l'inclinaison du nuage grâce à l'IMU (correct_inclinaison.m).
 
-Même calcul que la fonction MATLAB :
-1. moyenne de l'accéléromètre sur tout l'enregistrement (ou vecteur [ax, ay, az] direct) ;
-2. roll = atan2(ay, az) et pitch = atan2(-ax, sqrt(ay^2 + az^2)) (le lacet est ignoré) ;
-3. R_correction = (Ry * Rx)' ;
-4. trois transformations rigides : le nuage est déplacé vers le centre de l'IMU,
-   tourné, puis ramené.
-
-rigidtform3d utilise la convention « prémultiplication » : un point p devient R*p + t.
-Le nuage est dans le repère LiDAR (repère « center » de ousterFileReader, voir
-lecture_ouster.py) et l'accéléromètre dans les axes de l'IMU, comme dans MATLAB.
-"""
 
 import numpy as np
 

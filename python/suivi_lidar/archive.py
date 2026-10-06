@@ -1,11 +1,4 @@
-"""Archive des vitesses (structure archive_vitesses de sauvegarde.m) et fichiers .mat.
 
-Une entrée par objet (display_id), avec les mêmes champs que MATLAB. Chaque champ
-(sauf display_id) est un vecteur qui grandit d'une valeur à chaque trame où la
-piste est confirmée. Les fichiers .mat écrits ici s'ouvrent aussi dans MATLAB
-(variable archive_vitesses_filtree, tableau de structures 1 x K), et les fichiers
-.mat produits par MATLAB se relisent avec charger_mat.
-"""
 
 import numpy as np
 import scipy.io

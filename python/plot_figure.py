@@ -1,14 +1,4 @@
-"""ÉTUDE COMPARATIVE : CLASSIQUE vs ENSEMBLISTE vs PARTICULAIRE vs BOX PARTICULAIRE (plot_figure.m).
 
-Charge les quatre fichiers donnees_<FILTRE>.mat (écrits par sauvegarde.py, ou par
-sauvegarde.m dans MATLAB), cherche les objets communs aux quatre filtres,
-synchronise les trames communes et trace les sept graphiques superposés par objet
-(courbes lissées par une moyenne glissante sur 9 trames), puis l'erreur de cardinalité.
-
-Exemples :
-    python plot_figure.py
-    python plot_figure.py --dossier resultats --ne-pas-afficher
-"""
 
 import argparse
 import sys
