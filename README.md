@@ -112,7 +112,7 @@ pip install -r requirements.txt open3d
 
 Install Open3D in the same command as the other packages, so that pip selects compatible versions for all of them. Open3D is only needed for the live 3D viewer; without it, run the scripts with `--sans-visu`.
 
-### How to run
+### How to run (Python version)
 
 Put `3objets.pcap` and `3objets.json` in the `python/` folder (or give their paths with `--pcap` and `--json`), then:
 
